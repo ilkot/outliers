@@ -85,6 +85,30 @@ def stdBasedOutlier(data,sigma=3,outType='2side',removeOutlier=False):
         return np.array(outliers_removed)
     else:
         return data
+
+
+
+def stdBasedOutlier_df(df,col_name, sigma=3, removeOutlier=False):
+    # Compute the mean and standard deviation of the given column
+    col_mean = np.mean(df[col_name])
+    col_std = np.std(df[col_name])
+    
+    # Compute the z-score of each value in the column
+    z_scores = [(val - col_mean) / col_std for val in df[col_name]]
+    
+    # Create a boolean mask to identify the values that are considered outliers
+    # based on the z-score and the specified number of standard deviations (sigma)
+    mask = np.abs(z_scores) > sigma
+    
+    if removeOutlier:
+        # Remove the outliers from the data
+        df = df[~mask]
+    else:
+        # Add a new column to the data indicating whether each value is an outlier
+        df['is_outlier'] = mask
+    
+    return data
+
     
 #%%
 aa = stdBasedOutlier(data,sigma=2,outType='min',removeOutlier=True)
@@ -124,4 +148,40 @@ def IQRBasedOutlier(data,iqrThresh=1.5,outType='2side',removeOutlier=False):
         return data
 
 
+## detect outliers based on a column_name in dataframe
+def IQRBasedOutlier_df(df,col_name,iqrThresh=1.5,removeOutlier=False):
+    # calculate quartiles
+    q1, q3 = df[col_name].quantile([0.25, 0.75])
 
+    # calculate IQR
+    iqr = q3 - q1
+
+    # calculate lower and upper bounds
+    lower_bound = q1 - (iqr * iqrThresh)
+    upper_bound = q3 + (iqr * iqrThresh)
+
+    # create a new boolean column to indicate whether a row is an outlier
+    df['is_outlier'] = (df[col_name] < lower_bound) | (df[col_name] > upper_bound)
+    
+    if removeOutlier:
+        df_without_outliers = df[df['is_outlier']==False]
+        return df_without_outliers
+    else:
+        return df
+
+
+
+
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
